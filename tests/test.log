@@ -1,0 +1,9 @@
+Jul 10 00:01:28 dnsmasq[24755]: query[A] docs.google.com from 192.168.1.11
+Jul 10 00:01:28 dnsmasq[24755]: forwarded docs.google.com to 208.67.220.220
+Jul 10 00:01:28 dnsmasq[24755]: reply docs.google.com is 172.217.6.142
+Jul 10 00:01:31 dnsmasq[24755]: query[A] unifi from 192.168.1.13
+Jul 10 00:01:31 dnsmasq[24755]: config unifi is NODATA-IPv4
+Jul 10 00:01:42 dnsmasq[24755]: query[A] unifi from 192.168.1.12
+Jul 10 00:01:31 dnsmasq[24755]: query[A] openvpn from 192.168.1.11
+Jul 10 00:01:31 dnsmasq[24755]: config openvpn is NODATA-IPv4
+Jul 10 00:01:42 dnsmasq[24755]: query[A] openvpn from 192.168.1.12
