@@ -44,7 +44,7 @@ def counts_query(queries: list, include: list=None, exclude: list=None) -> dict:
     :param exclude: list of items to exclude, works as blacklist
     :return: Counter keyed to dns query
     """
-    return _counts_generic(queries, 2, include, exclude)
+    return _counts_generic(queries, 'query', include, exclude)
 
 
 def counts_client(queries: list, include: list=None, exclude: list=None) \
@@ -59,19 +59,15 @@ def counts_client(queries: list, include: list=None, exclude: list=None) \
     :param exclude: list of items to exclude, works as blacklist
     :return: Counter keyed to client ip query
     """
-    return _counts_generic(queries, 3, include, exclude)
+    return _counts_generic(queries, 'client', include, exclude)
 
 
-def _counts_generic(queries: list, index_to_count=0, include: list=None,
+def _counts_generic(queries: list, index_to_count, include: list=None,
                     exclude: list=None) -> dict:
-    if not include:
-        include = []
-    if not exclude:
-        exclude = []
     counter = Counter()
     for entry in queries:
-        if _query_filter(entry[index_to_count], include, exclude):
-            counter[entry[index_to_count]] += 1
+        if _query_filter(getattr(entry, index_to_count), include, exclude):
+            counter[getattr(entry, index_to_count)] += 1
     return counter
 
 
@@ -89,17 +85,23 @@ def _query_filter(entry: str, include: list = None, exclude: list = None)\
       blacklist will be excluded.
     
     :param entry: any string, intended for Query fields 
-    :param include: list of items to match and include, 
-     if word in entry it matches
-    :param exclude: list of items to exclude, if word in entry it matches
-    :return: 
+    :param include: list of items to match and include, must be exact match
+    :param exclude: list of items to exclude, must be exact match
+    :return: boolean, whether to include or not
     """
-    # TODO: Add regex options with their own list
+    # TODO: Add regex options with their own lists
     # TODO: Make generic and put in helpers file for own use in other projects
-    if include:
+    if not include:
+        include = []
+    if not exclude:
+        exclude = []
+
+    if not include and not exclude:
+        return True
+    elif include:
         if entry in include and entry not in exclude:
             return True
-    elif entry not in exclude:
+    elif exclude and entry not in exclude:
         return True
     return False
 
