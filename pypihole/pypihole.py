@@ -1,12 +1,18 @@
 import datetime
 import glob
-from collections import Counter, namedtuple
+from collections import Counter
+from functools import partial
+from typing import NamedTuple
 
 pihole_log_path = '/var/log'
 pihole_log_name = 'pihole.log'
 
 
-Query = namedtuple('Query', 'dt record_type query client')
+class Query(NamedTuple):
+    dt: str
+    record_type: str
+    query: str
+    client: str
 
 
 def parse_log(log_fn: str) -> list:
@@ -33,42 +39,58 @@ def parse_log(log_fn: str) -> list:
     return queries
 
 
-def counts_query(queries: list, include: list=None, exclude: list=None) -> dict:
+def _counts_generic(queries: list, include: list=None,
+                    exclude: list=None, **kwargs) -> dict:
     """
-    Counts queries and returns a Counter of all domains queries
-    
-    Filters are literal and must match exactly
-    
-    :param queries: list of Query namedtuples
-    :param include: list of items to include, works as whitelist
-    :param exclude: list of items to exclude, works as blacklist
-    :return: Counter keyed to dns query
+    Count queries, using kwarg index_to_count, which is namedtuple
+     Query named index such as 'query' or 'client'
+    Return Counter object
+
+    Best used by counts_client and counts_queries partials
+
+    :param queries: list of Query objects
+    :param include: list of strings to whitelist on, if None no
+     whitelisting occurs
+    :param exclude: list of strings to blacklist
+    :param kwargs: index_to_count, what Query index to count
+    :return: Counter keyed on Query.index_to_count
     """
-    return _counts_generic(queries, 'query', include, exclude)
-
-
-def counts_client(queries: list, include: list=None, exclude: list=None) \
-        -> dict:
-    """
-    Counts client requests and returns a Counter of all clients
-    
-    Filters are literal and must match exactly
-    
-    :param queries: list of Query namedtuples
-    :param include: list of items to include, works as whitelist
-    :param exclude: list of items to exclude, works as blacklist
-    :return: Counter keyed to client ip query
-    """
-    return _counts_generic(queries, 'client', include, exclude)
-
-
-def _counts_generic(queries: list, index_to_count, include: list=None,
-                    exclude: list=None) -> dict:
+    index_to_count = kwargs.get('index_to_count', 'query')
     counter = Counter()
     for entry in queries:
         if _query_filter(getattr(entry, index_to_count), include, exclude):
             counter[getattr(entry, index_to_count)] += 1
     return counter
+
+
+counts_client = partial(_counts_generic, index_to_count='client')
+counts_client.__doc__ = """Counts queries and returns a Counter of all domains queries
+
+    Filters are literal and must match exactly
+    
+    >>> counts_client(queries, include=['192.168.1.100', '192.168.1.101'], 
+                      exclude=['192.168.1.1'])
+
+    :param queries: list of Query namedtuples
+    :param include: list of items to include, works as whitelist
+    :param exclude: list of items to exclude, works as blacklist
+    :return: Counter keyed to dns query
+    """
+
+
+counts_query = partial(_counts_generic, index_to_count='query')
+counts_query.__doc__ = """Counts client requests and returns a Counter of all clients
+
+    Filters are literal and must match exactly
+    
+    >>> counts_query(queries, include=['duckduckgo.com'], 
+                      exclude=['google.com'])
+
+    :param queries: list of Query namedtuples
+    :param include: list of items to include, works as whitelist
+    :param exclude: list of items to exclude, works as blacklist
+    :return: Counter keyed to client ip query
+    """
 
 
 def _query_filter(entry: str, include: list = None, exclude: list = None)\

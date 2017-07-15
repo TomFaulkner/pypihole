@@ -10,7 +10,6 @@ class TestPyPiholeInternals(unittest.TestCase):
 
     def test__query_filter_no_filter(self):
         res = pypihole.pypihole._query_filter(self.filter_test_string)
-        print(res)
         self.assertTrue(res)
 
     def test__query_filter_include(self):
