@@ -43,6 +43,27 @@ def parse_log(log_fn: str) -> list:
     return queries
 
 
+def queries_per_client(queries: list) -> dict:
+    """ Given a list of Query objects return a dict keyed on client
+    with the value as a list Query objects requested by that client """
+    clients = {entry.client for entry in queries}
+    clients_dict = {}
+    for client in clients:
+        clients_dict[client] = []
+        for query in queries:
+            if query.client == client:
+                clients_dict[client].append(query)
+    return clients_dict
+
+
+def query_counts_per_client(queries: list) -> dict:
+    """ Given a list of Query objects return dict keyed on client
+    with the value as a Counter object of queries """
+    q_per_c = queries_per_client(queries)
+    return {client: counts_query(queries)
+            for client, queries in q_per_c.items()}
+
+
 def _counts_generic(queries: list, **kwargs) -> dict:
     """
     Count queries, using kwarg index_to_count, which is namedtuple
@@ -79,7 +100,6 @@ counts_client.__doc__ = """Counts queries and returns a Counter of all domains q
     :param exclude: list of items to exclude, works as blacklist
     :return: Counter keyed to dns query
     """
-
 
 counts_query = partial(_counts_generic, index_to_count='query')
 counts_query.__doc__ = """Counts client requests and returns a Counter of all clients
